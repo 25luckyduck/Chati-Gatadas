@@ -2,8 +2,8 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chati Gatadas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chati Gatadas - Mobile Edition</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Fuente Retro "Press Start 2P" -->
@@ -15,11 +15,12 @@
             font-family: 'Press Start 2P', cursive;
             background-color: #111;
             color: white;
-            overflow: hidden;
+            overflow: hidden; /* Evitar scroll en app tipo juego */
             user-select: none;
+            touch-action: manipulation; /* Mejorar respuesta táctil */
         }
 
-        /* Efecto CRT (Scanlines) */
+        /* Efecto CRT (Scanlines) - Atenuado para móviles para mejor visibilidad */
         .scanlines {
             position: fixed;
             top: 0;
@@ -30,33 +31,47 @@
                 to bottom,
                 rgba(255, 255, 255, 0),
                 rgba(255, 255, 255, 0) 50%,
-                rgba(0, 0, 0, 0.2) 50%,
-                rgba(0, 0, 0, 0.2)
+                rgba(0, 0, 0, 0.1) 50%,
+                rgba(0, 0, 0, 0.1)
             );
             background-size: 100% 4px;
             pointer-events: none;
             z-index: 50;
         }
 
-        /* Animaciones de texto */
+        /* Animaciones */
         @keyframes flash {
             0%, 100% { opacity: 1; }
             50% { opacity: 0; }
         }
-        .flash-text {
-            animation: flash 0.8s infinite;
+        .flash-text { animation: flash 0.8s infinite; }
+
+        @keyframes pulse-border {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
 
-        /* Cursor de selección (Borde parpadeante) */
+        /* CURSORES DE SELECCIÓN */
         .p1-cursor {
-            border: 4px solid #ef4444; /* Rojo P1 */
+            border: 4px solid #ef4444; 
             box-shadow: 0 0 10px #ef4444;
-            transform: scale(1.1);
+            z-index: 20;
+            animation: pulse-border 1s infinite;
+        }
+        .p1-locked {
+            border: 4px solid #7f1d1d;
+            filter: grayscale(0.5);
             z-index: 10;
-            background-color: white;
+        }
+        .p2-cursor {
+            border: 4px solid #3b82f6; 
+            box-shadow: 0 0 10px #3b82f6;
+            z-index: 20;
+            animation: pulse-border 1s infinite;
         }
 
-        /* Fondo de la selección de personaje (Cuadrícula azul clásica) */
+        /* Fondo Grid */
         .grid-bg {
             background-image: 
                 linear-gradient(#000088 2px, transparent 2px),
@@ -65,7 +80,7 @@
             background-color: #000044;
         }
 
-        /* Utilidades para ocultar pantallas */
+        /* Pantallas */
         .screen {
             display: none;
             width: 100vw;
@@ -73,110 +88,154 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            padding: 1rem;
         }
-        .screen.active {
-            display: flex;
-        }
+        .screen.active { display: flex; }
 
-        .pixel-art {
-            image-rendering: pixelated;
+        .pixel-art { image-rendering: pixelated; }
+
+        /* Botón Retro Genérico */
+        .btn-retro {
+            background-color: #c02d2d;
+            border: 4px solid white;
+            box-shadow: 4px 4px 0px #000;
+            color: white;
+            text-shadow: 2px 2px 0 #000;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .btn-retro:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #000;
         }
     </style>
 </head>
 <body>
 
-    <!-- Efecto de monitor antiguo -->
     <div class="scanlines"></div>
 
     <!-- PANTALLA 1: INTRO -->
     <div id="intro-screen" class="screen active bg-black">
-        <!-- Logo Principal -->
-        <div class="mb-8">
-            <img src="imagenes/altoenshow.png" alt="ALTO EN SHOW" class="max-w-3xl w-full object-contain"
+        <div class="mb-4 md:mb-8 w-full flex justify-center">
+            <img src="imagenes/altoenshow.jpg" alt="ALTO EN SHOW" class="max-w-[90%] md:max-w-3xl w-full object-contain"
                  onerror="this.style.display='none'; document.getElementById('fallback-title').style.display='block'">
-            
-            <!-- Fallback por si la imagen no carga -->
-            <h1 id="fallback-title" class="hidden text-6xl text-yellow-500 text-center leading-tight">
-                ALTO<br>
-                <span class="text-red-600">EN SHOW</span>
+            <h1 id="fallback-title" class="hidden text-4xl md:text-6xl text-yellow-500 text-center leading-tight">
+                ALTO<br><span class="text-red-600">EN SHOW</span>
             </h1>
         </div>
-        
-        <div class="mt-8 text-center">
-            <p class="text-xl mb-4 text-gray-400">CREDIT 01</p>
-            <p class="text-2xl text-yellow-300 flash-text cursor-pointer" onclick="nextScreen()">PRESS START</p>
+        <div class="mt-4 md:mt-8 text-center">
+            <p class="text-sm md:text-xl mb-4 text-gray-400">CREDIT 01</p>
+            <p class="text-lg md:text-2xl text-yellow-300 flash-text cursor-pointer border-2 border-yellow-300 p-4 rounded md:border-0" onclick="nextScreen()">
+                PRESS START           </p>
         </div>
-        
-        <div class="absolute bottom-8 text-xs text-gray-500 text-center w-full">
-            © EL CHATO RAUL INC. ALL RIGHTS RESERVED.<br>
-            CODE BY N0 S0Y R0B0T
+        <div class="absolute bottom-4 text-[10px] md:text-xs text-gray-500 text-center w-full px-4">
+            © EL CHATO RAUL INC.<br>CODE BY N0 S0Y R0B0T
         </div>
     </div>
 
-    <!-- PANTALLA 2: SELECCIÓN DE PERSONAJE -->
+    <!-- PANTALLA 2: SELECCIÓN DE PERSONAJES (P1 & P2) -->
     <div id="char-select-screen" class="screen grid-bg">
-        <h2 class="text-3xl text-yellow-400 mb-2 shadow-black drop-shadow-md">SELECT YOUR FIGHTER</h2>
-        <div class="flex w-full max-w-5xl justify-between items-center px-4 h-full py-4">
+        <h2 id="select-title" class="text-xl md:text-3xl text-yellow-400 mb-2 shadow-black drop-shadow-md text-center">PLAYER 1 SELECT</h2>
+        
+        <!-- Contenedor Principal: Columna en Móvil, Fila en Desktop -->
+        <div class="flex flex-col md:flex-row w-full max-w-6xl justify-between items-center h-full py-2 gap-4">
             
-            <!-- Panel Izquierdo: P1 Grande -->
-            <div class="w-1/3 flex flex-col items-center">
-                <div class="border-4 border-yellow-600 bg-black w-64 h-64 mb-4 overflow-hidden relative">
-                    <img id="p1-big-img" src="" alt="P1" class="w-full h-full object-cover pixel-art" 
-                         onerror="this.src='https://placehold.co/300x300/222/FFF?text=P1+Img'">
-                </div>
-                <h3 id="p1-name" class="text-3xl text-white">RYU</h3>
-                <img id="p1-flag" src="" class="mt-2 w-12 h-8" onerror="this.style.display='none'">
-            </div>
-
-            <!-- Grilla Central (2 filas x 4 columnas) -->
-            <div class="w-1/3 flex justify-center">
-                <div id="char-grid" class="grid grid-cols-4 gap-2">
-                    <!-- Se genera con JS -->
-                </div>
-            </div>
-
-            <!-- Panel Derecho: Info (o P2) -->
-            <div class="w-1/3 flex flex-col items-center opacity-50">
-                <div class="border-4 border-blue-600 bg-black w-64 h-64 mb-4 overflow-hidden">
-                    <div class="w-full h-full flex items-center justify-center bg-gray-900 text-blue-400">
-                        CPU
+            <!-- Zona Superior Móvil: Paneles P1 y P2 juntos -->
+            <div class="flex flex-row md:hidden w-full justify-around items-end gap-2 mb-2">
+                 <!-- P1 Móvil -->
+                 <div class="flex flex-col items-center transition-opacity duration-300 w-1/2" id="p1-panel-mobile">
+                    <div class="border-2 border-red-600 bg-black w-24 h-24 sm:w-32 sm:h-32 overflow-hidden relative shadow-lg">
+                        <img id="p1-big-img-m" src="" class="w-full h-full object-cover pixel-art" 
+                             onerror="this.src='https://placehold.co/300x300/222/FFF?text=P1'">
                     </div>
+                    <div class="bg-red-700 text-white px-2 py-0.5 text-xs -mt-2 z-10">1P</div>
+                    <h3 id="p1-name-m" class="text-xs sm:text-sm text-white mt-1 text-center truncate w-full">RYU</h3>
                 </div>
-                <h3 class="text-2xl text-blue-400">???</h3>
+                <!-- P2 Móvil -->
+                <div class="flex flex-col items-center transition-opacity duration-300 w-1/2 opacity-50" id="p2-panel-mobile">
+                    <div class="border-2 border-blue-600 bg-black w-24 h-24 sm:w-32 sm:h-32 overflow-hidden relative shadow-lg">
+                        <img id="p2-big-img-m" src="" class="w-full h-full object-cover pixel-art grayscale" 
+                             onerror="this.src='https://placehold.co/300x300/222/FFF?text=P2'">
+                    </div>
+                    <div class="bg-blue-700 text-white px-2 py-0.5 text-xs -mt-2 z-10">2P</div>
+                    <h3 id="p2-name-m" class="text-xs sm:text-sm text-blue-400 mt-1 text-center truncate w-full">???</h3>
+                </div>
+            </div>
+
+            <!-- Panel Izquierdo: P1 (Desktop Only) -->
+            <div class="hidden md:flex w-1/3 flex-col items-center transition-opacity duration-300" id="p1-panel">
+                <div class="border-4 border-red-600 bg-black w-64 h-64 mb-4 overflow-hidden relative shadow-lg shadow-red-900/50">
+                    <img id="p1-big-img" src="" class="w-full h-full object-cover pixel-art" onerror="this.src='https://placehold.co/300x300/222/FFF?text=P1'">
+                </div>
+                <div class="bg-red-700 text-white px-4 py-1 mb-2 text-sm skew-x-[-10deg]">1P</div>
+                <h3 id="p1-name" class="text-3xl text-white">RYU</h3>
+            </div>
+
+            <!-- Grilla Central (Responsive) -->
+            <div class="w-full md:w-1/3 flex flex-col items-center justify-center">
+                <div id="char-grid" class="grid grid-cols-4 gap-2 p-2 bg-black/50 border-2 border-gray-700 rounded touch-manipulation">
+                    <!-- JS Genera las celdas -->
+                </div>
+                
+                <!-- Botón de Confirmación Móvil/Desktop -->
+                <button onclick="confirmSelection()" class="mt-6 btn-retro py-3 px-8 text-sm md:text-xl active:scale-95">
+                    CONFIRM                </button>
+            </div>
+
+            <!-- Panel Derecho: P2 (Desktop Only) -->
+            <div class="hidden md:flex w-1/3 flex-col items-center opacity-50 transition-opacity duration-300" id="p2-panel">
+                <div class="border-4 border-blue-600 bg-black w-64 h-64 mb-4 overflow-hidden relative shadow-lg shadow-blue-900/50">
+                    <img id="p2-big-img" src="" class="w-full h-full object-cover pixel-art grayscale" onerror="this.src='https://placehold.co/300x300/222/FFF?text=P2'">
+                </div>
+                <div class="bg-blue-700 text-white px-4 py-1 mb-2 text-sm skew-x-[-10deg]">2P</div>
+                <h3 id="p2-name" class="text-3xl text-blue-400">???</h3>
             </div>
         </div>
         
-        <div class="absolute bottom-4 text-center w-full">
-            <p class="text-green-400 text-sm">USA LAS FLECHAS PARA MOVERTE • ENTER PARA SELECCIONAR</p>
+        <div class="absolute bottom-2 text-center w-full px-2">
+            <p id="instruction-text" class="text-green-400 text-[10px] md:text-sm animate-pulse">PLAYER 1: TAP TO SELECT</p>
         </div>
     </div>
 
     <!-- PANTALLA 3: SELECCIÓN DE ESCENARIO -->
     <div id="stage-select-screen" class="screen bg-gray-900 relative">
-        <!-- Imagen de fondo difuminada del escenario actual -->
         <div id="stage-bg-layer" class="absolute inset-0 bg-cover bg-center opacity-30 blur-sm transition-all duration-500"></div>
         
-        <div class="relative z-10 flex flex-col items-center w-full">
-            <h2 class="text-4xl text-red-500 mb-8 italic" style="text-shadow: 2px 2px 0 #FFF;">MAP SELECT</h2>
+        <div class="relative z-10 flex flex-col items-center w-full h-full justify-center">
+            <h2 class="text-2xl md:text-4xl text-red-500 mb-4 md:mb-8 italic text-center" style="text-shadow: 2px 2px 0 #FFF;">MAP SELECT</h2>
             
-            <div class="flex items-center justify-center w-full space-x-8">
-                <button class="text-4xl text-yellow-400 hover:text-white animate-pulse" onclick="prevStage()">&#9664;</button>
+            <div class="flex flex-col md:flex-row items-center justify-center w-full space-y-4 md:space-y-0 md:space-x-8">
                 
-                <div class="border-8 border-white shadow-2xl w-2/3 max-w-2xl h-80 relative overflow-hidden group">
-                    <img id="stage-preview" src="imagenes\Escenarios\Posada Del Mirador - Janeth\stage.jpg" class="w-full h-full object-cover pixel-art transition-transform duration-300 group-hover:scale-105"
+                <!-- Botón Izquierda (Arriba en móvil) -->
+                <button class="text-4xl text-yellow-400 hover:text-white bg-black/50 rounded-full w-12 h-12 flex items-center justify-center border-2 border-yellow-600 md:border-0 md:bg-transparent md:w-auto md:h-auto" onclick="prevStage()">
+                    <span class="md:hidden">&#9650;</span> <!-- Triángulo arriba móvil -->
+                    <span class="hidden md:inline">&#9664;</span> <!-- Triángulo izq desktop -->
+                </button>
+                
+                <div class="border-4 md:border-8 border-white shadow-2xl w-full max-w-[300px] md:max-w-2xl aspect-video relative overflow-hidden group">
+                    <img id="stage-preview" src="" class="w-full h-full object-cover pixel-art"
                          onerror="this.src='https://placehold.co/600x400/333/FFF?text=Stage+Not+Found'">
                     
-                    <div class="absolute bottom-0 left-0 w-full bg-black bg-opacity-70 py-4 px-6">
-                        <h3 id="stage-name" class="text-2xl text-yellow-300">POSADA DEL MIRADO</h3>
-                        <p id="stage-owner" class="text-sm text-gray-300">HOME OF JANETH</p>
+                    <div class="absolute bottom-0 left-0 w-full bg-black bg-opacity-70 py-2 px-3 flex justify-between items-end">
+                        <div>
+                            <h3 id="stage-name" class="text-sm md:text-2xl text-yellow-300 truncate">STAGE</h3>
+                            <p id="stage-owner" class="text-[10px] md:text-sm text-gray-300">HOME</p>
+                        </div>
+                        <div class="text-right text-[10px] md:text-xs text-gray-400">
+                            P1 VS P2
+                        </div>
                     </div>
                 </div>
 
-                <button class="text-4xl text-yellow-400 hover:text-white animate-pulse" onclick="nextStage()">&#9654;</button>
+                <!-- Botón Derecha (Abajo en móvil) -->
+                <button class="text-4xl text-yellow-400 hover:text-white bg-black/50 rounded-full w-12 h-12 flex items-center justify-center border-2 border-yellow-600 md:border-0 md:bg-transparent md:w-auto md:h-auto" onclick="nextStage()">
+                    <span class="md:hidden">&#9660;</span> <!-- Triángulo abajo móvil -->
+                    <span class="hidden md:inline">&#9654;</span> <!-- Triángulo der desktop -->
+                </button>
             </div>
 
-            <div class="mt-12">
-                <button onclick="startGame()" class="bg-red-600 hover:bg-red-700 text-white py-4 px-12 text-xl border-4 border-white shadow-lg transform active:scale-95 transition-all">
+            <div class="mt-8 md:mt-12">
+                <button onclick="startGame()" class="btn-retro py-4 px-12 text-xl transform active:scale-95 transition-all bg-gradient-to-r from-red-600 to-orange-600">
                     FIGHT!
                 </button>
             </div>
@@ -184,201 +243,252 @@
     </div>
 
     <script>
-        // --- CONFIGURACIÓN DE DATOS ---
-        // Definimos los personajes y sus carpetas asociadas.
-        // 'id' = Nombre de la carpeta en imagenes/Personajes/
-        // 'stageFolder' = Nombre de la carpeta en imagenes/Escenarios/
+        // --- DATOS ---
         const characters = [
             { id: 'Raul', name: 'RAUL', stageName: 'EL CHATO RAUL', stageFolder: 'El Chato Raul - Raul' },
             { id: 'Chiquiwilo', name: 'CHIQUIWILO', stageName: 'TQS', stageFolder: 'TQS - Chiquiwilo' },
-			{ id: 'Macla', name: 'MACLA', stageName: 'CUESTION DE CUESTIONAR', stageFolder: 'Cuestion De Cuestionar - Macla' },
+            { id: 'Macla', name: 'MACLA', stageName: 'CUESTION DE CUESTIONAR', stageFolder: 'Cuestion De Cuestionar - Macla' },
             { id: 'Suemi', name: 'SUEMI', stageName: 'GOOD FLORO', stageFolder: 'Good Floro - Suemi' },
             { id: 'Misha', name: 'MISHA', stageName: 'QUEMICHI', stageFolder: 'Quemichi - Misha' },
             { id: 'Nat', name: 'NAT', stageName: 'SHANGRILA', stageFolder: 'Shangrila - Nat' },
             { id: 'Alonso', name: 'ALONSO', stageName: 'ZALO', stageFolder: 'Zalo - Alonso' },
-            { id: 'Janeth', name: 'JANETH', stageName: 'Posada Del Mirador', stageFolder: 'Posada Del Mirador - Janeth'} 
+            { id: 'Janeth', name: 'JANETH', stageName: 'POSADA DEL MIRADOR', stageFolder: 'Posada Del Mirador - Janeth' } 
         ];
 
-        // --- ESTADO DEL JUEGO ---
-        let currentScreen = 'intro'; // intro, char-select, stage-select
-        let p1Index = 0; // Índice en el array de characters (0-7)
-        let selectedChar = null;
+        // --- ESTADO ---
+        let currentScreen = 'intro';
+        let selectionPhase = 1; 
+        let p1Index = 0;
+        let p2Index = 1;
+        let p1Char = null;
+        let p2Char = null;
         let stageIndex = 0;
 
-        // --- REFERENCIAS DOM ---
+        // --- REFERENCIAS ---
         const screens = {
             intro: document.getElementById('intro-screen'),
             charSelect: document.getElementById('char-select-screen'),
             stageSelect: document.getElementById('stage-select-screen')
         };
+        
         const charGrid = document.getElementById('char-grid');
+        const selectTitle = document.getElementById('select-title');
+        const instructionText = document.getElementById('instruction-text');
+        
+        // Elementos UI Desktop
+        const p1Panel = document.getElementById('p1-panel');
         const p1BigImg = document.getElementById('p1-big-img');
         const p1Name = document.getElementById('p1-name');
+        const p2Panel = document.getElementById('p2-panel');
+        const p2BigImg = document.getElementById('p2-big-img');
+        const p2Name = document.getElementById('p2-name');
+
+        // Elementos UI Mobile
+        const p1PanelM = document.getElementById('p1-panel-mobile');
+        const p1BigImgM = document.getElementById('p1-big-img-m');
+        const p1NameM = document.getElementById('p1-name-m');
+        const p2PanelM = document.getElementById('p2-panel-mobile');
+        const p2BigImgM = document.getElementById('p2-big-img-m');
+        const p2NameM = document.getElementById('p2-name-m');
+
+        // Stage UI
         const stagePreview = document.getElementById('stage-preview');
         const stageBgLayer = document.getElementById('stage-bg-layer');
         const stageName = document.getElementById('stage-name');
         const stageOwner = document.getElementById('stage-owner');
 
-        // --- INICIALIZACIÓN ---
         function init() {
             renderGrid();
-            updateCharUI();
-            
-            // Event Listener Global de Teclado
+            updateSelectionUI();
             document.addEventListener('keydown', handleInput);
         }
 
-        // --- LÓGICA DE PANTALLAS ---
         function switchScreen(screenName) {
-            // Ocultar todas
             Object.values(screens).forEach(s => s.classList.remove('active'));
-            // Mostrar la deseada
             screens[screenName].classList.add('active');
             currentScreen = screenName;
-
             if (screenName === 'stage-select') {
-                // Al entrar a selección de escenario, empezamos por el del personaje elegido
                 stageIndex = p1Index; 
                 updateStageUI();
             }
         }
 
-        // --- LÓGICA DE SELECCIÓN DE PERSONAJE ---
         function renderGrid() {
             charGrid.innerHTML = '';
             characters.forEach((char, index) => {
                 const cell = document.createElement('div');
-                cell.className = 'w-16 h-16 border-2 border-gray-600 bg-gray-800 relative overflow-hidden';
+                // Ajuste de tamaño para móvil (w-14) vs desktop (w-20)
+                cell.className = 'w-14 h-14 md:w-20 md:h-20 border-2 border-gray-600 bg-gray-800 relative overflow-hidden transition-all duration-100 cursor-pointer';
+                cell.id = `char-cell-${index}`;
                 
-                // Ruta: imagenes/Personajes/[NombreCarpeta]/portrait.png
+                // EVENTO CLICK / TAP
+                cell.onclick = () => {
+                    if (selectionPhase === 1) {
+                        p1Index = index;
+                    } else {
+                        p2Index = index;
+                    }
+                    updateSelectionUI();
+                };
+
                 const img = document.createElement('img');
                 img.src = `imagenes/Personajes/${char.id}/portrait.png`; 
                 img.alt = char.name;
                 img.className = 'w-full h-full object-cover';
-                // Fallback para desarrollo
-                img.onerror = function() {
-                    this.src = `https://placehold.co/100x100/333/FFF?text=${char.name.substring(0,3)}`;
-                };
-
+                img.onerror = function() { this.src = `https://placehold.co/100x100/333/FFF?text=${char.name.substring(0,3)}`; };
+                
                 cell.appendChild(img);
-                
-                // Si es el índice actual, añadir clase de cursor
-                if (index === p1Index) {
-                    cell.classList.add('p1-cursor');
-                }
-                
-                cell.id = `char-cell-${index}`;
                 charGrid.appendChild(cell);
             });
+            updateCursors();
         }
 
-        function updateCharUI() {
-            // Actualizar el Grid visual
-            for (let i = 0; i < characters.length; i++) {
+        function updateCursors() {
+            for(let i=0; i<characters.length; i++) {
                 const cell = document.getElementById(`char-cell-${i}`);
-                if (i === p1Index) {
+                cell.className = 'w-14 h-14 md:w-20 md:h-20 border-2 border-gray-600 bg-gray-800 relative overflow-hidden cursor-pointer'; // Reset
+                
+                if (selectionPhase === 2 && i === p1Index) {
+                    cell.classList.add('p1-locked');
+                    cell.classList.remove('border-gray-600');
+                }
+                else if (selectionPhase === 1 && i === p1Index) {
                     cell.classList.add('p1-cursor');
                     cell.classList.remove('border-gray-600');
-                } else {
-                    cell.classList.remove('p1-cursor');
-                    cell.classList.add('border-gray-600');
+                }
+                if (selectionPhase === 2 && i === p2Index) {
+                    cell.classList.add('p2-cursor');
+                    cell.classList.remove('border-gray-600');
                 }
             }
-
-            // Actualizar Panel Grande Izquierdo
-            const char = characters[p1Index];
-            p1Name.innerText = char.name;
-            
-            // Ruta: imagenes/Personajes/[NombreCarpeta]/full.png
-            const bigImgPath = `imagenes/Personajes/${char.id}/full.png`;
-            p1BigImg.src = bigImgPath;
-            p1BigImg.onerror = function() {
-                 this.src = `https://placehold.co/400x600/111/FFF?text=${char.name}`;
-            };
         }
 
-        // --- LÓGICA DE SELECCIÓN DE ESCENARIO ---
+        function updateSelectionUI() {
+            updateCursors();
+            const char1 = characters[p1Index];
+            const char2 = characters[p2Index];
+
+            // Update P1 (Desktop & Mobile)
+            const p1ImgSrc = `imagenes/Personajes/${char1.id}/full.png`;
+            p1Name.innerText = char1.name;
+            p1NameM.innerText = char1.name;
+            p1BigImg.src = p1ImgSrc;
+            p1BigImgM.src = p1ImgSrc;
+            
+            // Error handlers (se reasignan para asegurar que funcionen tras cambiar src)
+            const errorFnP1 = function() { this.src = `https://placehold.co/400x600/111/FFF?text=${char1.name}`; };
+            p1BigImg.onerror = errorFnP1;
+            p1BigImgM.onerror = errorFnP1;
+
+            // Update P2
+            const p2NameText = selectionPhase === 2 ? char2.name : "???";
+            p2Name.innerText = p2NameText;
+            p2NameM.innerText = p2NameText;
+
+            if (selectionPhase === 2) {
+                const p2ImgSrc = `imagenes/Personajes/${char2.id}/full.png`;
+                p2BigImg.src = p2ImgSrc;
+                p2BigImgM.src = p2ImgSrc;
+                
+                p2BigImg.classList.remove('grayscale');
+                p2Panel.classList.remove('opacity-50');
+                p2BigImgM.classList.remove('grayscale');
+                p2PanelM.classList.remove('opacity-50');
+
+                const errorFnP2 = function() { this.src = `https://placehold.co/400x600/111/FFF?text=${char2.name}`; };
+                p2BigImg.onerror = errorFnP2;
+                p2BigImgM.onerror = errorFnP2;
+            } else {
+                const waitSrc = `https://placehold.co/300x300/222/FFF?text=WAITING`;
+                p2BigImg.src = waitSrc;
+                p2BigImgM.src = waitSrc;
+                p2BigImg.classList.add('grayscale');
+                p2Panel.classList.add('opacity-50');
+                p2BigImgM.classList.add('grayscale');
+                p2PanelM.classList.add('opacity-50');
+            }
+
+            // Textos
+            if (selectionPhase === 1) {
+                selectTitle.innerText = "PLAYER 1 SELECT";
+                selectTitle.className = "text-xl md:text-3xl text-red-500 mb-2 shadow-black drop-shadow-md text-center";
+                instructionText.innerText = "PLAYER 1: SELECT YOUR FIGHTER";
+                instructionText.className = "text-red-400 text-[10px] md:text-sm animate-pulse";
+            } else {
+                selectTitle.innerText = "PLAYER 2 SELECT";
+                selectTitle.className = "text-xl md:text-3xl text-blue-500 mb-2 shadow-black drop-shadow-md text-center";
+                instructionText.innerText = "PLAYER 2: SELECT YOUR FIGHTER";
+                instructionText.className = "text-blue-400 text-[10px] md:text-sm animate-pulse";
+            }
+        }
+
+        // --- FUNCIÓN DE CONFIRMACIÓN (BOTÓN) ---
+        function confirmSelection() {
+            if (currentScreen !== 'charSelect') return;
+
+            if (selectionPhase === 1) {
+                // Confirmar P1
+                p1Char = characters[p1Index];
+                selectionPhase = 2;
+                if (p2Index === p1Index) p2Index = (p2Index + 1) % characters.length;
+                updateSelectionUI();
+            } else {
+                // Confirmar P2
+                p2Char = characters[p2Index];
+                setTimeout(() => switchScreen('stageSelect'), 200);
+            }
+        }
+
         function updateStageUI() {
             const char = characters[stageIndex];
-            
-            // Ruta: imagenes/Escenarios/[NombreCarpeta]/stage.jpg
-            // Asumimos que dentro de la carpeta el archivo se llama stage.jpg
             const stagePath = `imagenes/Escenarios/${char.stageFolder}/stage.jpg`;
             
             stagePreview.src = stagePath;
-            stagePreview.onerror = function() {
-                this.src = `https://placehold.co/800x400/224/FFF?text=${char.stageName}`;
-            };
-
-            // Fondo difuminado
+            stagePreview.onerror = function() { this.src = `https://placehold.co/800x400/224/FFF?text=${char.stageName}`; };
             stageBgLayer.style.backgroundImage = `url('${stagePreview.src}')`;
 
             stageName.innerText = char.stageName;
             stageOwner.innerText = `HOME OF ${char.name}`;
         }
 
-        // --- CONTROL DE INPUTS (TECLADO) ---
+        // --- INPUTS DE TECLADO (Mantener compatibilidad PC) ---
         function handleInput(e) {
             if (currentScreen === 'intro') {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    switchScreen('charSelect');
-                }
+                if (e.key === 'Enter' || e.key === ' ') switchScreen('charSelect');
             } 
             else if (currentScreen === 'charSelect') {
                 const cols = 4;
-                const rows = 2;
                 const total = characters.length;
+                let activeIndex = selectionPhase === 1 ? p1Index : p2Index;
 
-                if (e.key === 'ArrowRight') {
-                    p1Index = (p1Index + 1) % total;
-                    updateCharUI();
-                } else if (e.key === 'ArrowLeft') {
-                    p1Index = (p1Index - 1 + total) % total;
-                    updateCharUI();
-                } else if (e.key === 'ArrowDown') {
-                    if (p1Index + cols < total) p1Index += cols;
-                    updateCharUI();
-                } else if (e.key === 'ArrowUp') {
-                    if (p1Index - cols >= 0) p1Index -= cols;
-                    updateCharUI();
-                } else if (e.key === 'Enter') {
-                    selectedChar = characters[p1Index];
-                    const cell = document.getElementById(`char-cell-${p1Index}`);
-                    cell.style.backgroundColor = 'white';
-                    setTimeout(() => switchScreen('stageSelect'), 200);
-                }
+                if (e.key === 'ArrowRight') activeIndex = (activeIndex + 1) % total;
+                else if (e.key === 'ArrowLeft') activeIndex = (activeIndex - 1 + total) % total;
+                else if (e.key === 'ArrowDown') { if (activeIndex + cols < total) activeIndex += cols; }
+                else if (e.key === 'ArrowUp') { if (activeIndex - cols >= 0) activeIndex -= cols; }
+                
+                if (selectionPhase === 1) p1Index = activeIndex; else p2Index = activeIndex;
+
+                if (e.key === 'Enter') confirmSelection();
+                
+                updateSelectionUI();
             }
             else if (currentScreen === 'stageSelect') {
-                if (e.key === 'ArrowRight') {
-                    nextStage();
-                } else if (e.key === 'ArrowLeft') {
-                    prevStage();
-                } else if (e.key === 'Enter') {
-                    startGame();
-                }
+                if (e.key === 'ArrowRight') nextStage();
+                else if (e.key === 'ArrowLeft') prevStage();
+                else if (e.key === 'Enter') startGame();
             }
         }
 
-        // Funciones auxiliares para botones HTML (Mouse click)
         function nextScreen() { if(currentScreen === 'intro') switchScreen('charSelect'); }
-        
-        function nextStage() {
-            stageIndex = (stageIndex + 1) % characters.length;
-            updateStageUI();
-        }
-        function prevStage() {
-            stageIndex = (stageIndex - 1 + characters.length) % characters.length;
-            updateStageUI();
-        }
+        function nextStage() { stageIndex = (stageIndex + 1) % characters.length; updateStageUI(); }
+        function prevStage() { stageIndex = (stageIndex - 1 + characters.length) % characters.length; updateStageUI(); }
         
         function startGame() {
-            alert(`COMBATE INICIADO: ${selectedChar.name} VS CPU en ${characters[stageIndex].stageName}`);
+            alert(`COMBATE LISTO:\n${p1Char.name} VS ${p2Char.name}\nESCENARIO: ${characters[stageIndex].stageName}`);
             location.reload(); 
         }
 
-        // Arrancar
         init();
-
     </script>
 </body>
 </html>
